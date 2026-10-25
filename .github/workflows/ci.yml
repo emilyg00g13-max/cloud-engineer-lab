@@ -32,17 +32,38 @@ jobs:
       - name: Run automated tests
         run: python -m pytest -v
 
-      - name: Build application
+#      - name: Build application
+#        run: |
+#          mkdir -p dist
+#          cp app.py dist/
+#          cp test_app.py dist/
+#          echo "Build completed successfully" > dist/BUILD_INFO.txt
+
+#      - name: Upload build artifact
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: python-app-build
+#          path: dist/
+#          if-no-files-found: error
+#          retention-days: 7
+
+
+      - name: Build Docker image
+        run: docker build -t cloud-app:${{ github.sha }} .
+
+      - name: Smoke test container
+        run: |
+          docker run --rm cloud-app:${{ github.sha }}
+
+      - name: Export Docker image
         run: |
           mkdir -p dist
-          cp app.py dist/
-          cp test_app.py dist/
-          echo "Build completed successfully" > dist/BUILD_INFO.txt
+          docker save -o dist/cloud-app.tar cloud-app:${{ github.sha }}
 
-      - name: Upload build artifact
+      - name: Upload Docker image artifact
         uses: actions/upload-artifact@v4
         with:
-          name: python-app-build
-          path: dist/
+          name: cloud-app-image
+          path: dist/cloud-app.tar
           if-no-files-found: error
           retention-days: 7
